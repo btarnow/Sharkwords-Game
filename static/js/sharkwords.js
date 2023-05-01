@@ -13,20 +13,23 @@ const WORDS = [
   'durian',
   'peanut',
   'chocolate',
+  'pirate',
+  'hello',
 ];
 
 const CLASSES = {
   letterGuess: 'letter-guess',
 };
 
-const numWrong = 0;
+function generateRandomWord(wordsArray) {
+  const randomIndex = Math.floor((Math.random()*wordsArray.length));
+  const randomWord = wordsArray[randomIndex];
+  return randomWord;
+}
 
-// Loop over the letters in `word` and create divs.
-// The divs should be appended to the section with id="word-container".
-//
-// Use the following template string to create each div:
-// `<div class="letter-box ${letter}"></div>`
-//
+
+let numWrong = 0;
+
 const createDivsForChars = (word) => {
 
   const wordContainer = document.querySelector('#word-container');
@@ -38,11 +41,9 @@ const createDivsForChars = (word) => {
     charDiv.classList.add(letterInWord);
     wordContainer.append(charDiv);
   }
-  
 };
 
-// Loop over each letter in the alphabet and generate a button for each letter
-// The buttons should be appended to the section with id="letter-buttons".
+
 function generateLetterButtons() {
   const lettersContainer = document.querySelector('#letter-buttons');
 
@@ -56,6 +57,7 @@ function generateLetterButtons() {
     lettersContainer.append(button);
   }
 }
+
 
 function setupGuessHandlers(word, successTracker) {
   const guessHandler = function guessHandler(clickEvent) {
@@ -82,27 +84,78 @@ const processGuess = (letter, word, successTracker) => {
       successTracker.numFound += 1;
     }
 
+    let isWin;
+
     //  Check for victory by seeing if all of the letters in word are accounted for
     if (successTracker.numFound === successTracker.numToFind) {
-      alert('Victory!\n🎉🎉🎉🎉\nRefresh to reset :)');
+      isWin = true;
+      endGame(word, isWin);
     }
   } else {
     numWrong += 1;
+
+    // Update user by incrementing image`
+    const imgEl = document.querySelector('#shark-img img');
+    imgEl.setAttribute('src', `/static/images/guess${numWrong}.png`);
+
+    // End game if out of guesses
+    if (numWrong === 5) {
+      isWin = false;
+      endGame(word, isWin);
+    }
   }
-    // have the letter appear in the divs for the word lines in as many spots as it is in 
-  // if the letter is NOT in the word 
-    // increment the numWrong by 1 (which changes the image too)
 };
+
+function endGame(word, isWin) {
+  const endGameMsgDiv = document.querySelector('#letter-buttons');
+
+  const msgTitle = isWin ? 'Victory 🎉🎉🎉' : 'Shark Attack 🦈';
+  const msgBody = isWin ? `You found the word ${word}` : `Womp. Womp. Maybe next time. Your word was <em>${word}.</em>`;
+
+  endGameMsgDiv.innerHTML = `
+    <div>
+        <h3>${msgTitle}</h3>
+        <p class="msgBody">${msgBody}</p>
+        <a class="msgBody" href="/sharkwords">Click here to play again</a>
+    </div>
+  `;
+
+  if (isWin === false) {
+    const wordContainer = document.querySelector('#word-container');
+    wordContainer.innerHTML = "";
+  }
+}
+
+// For comparison if you're bored
+function pirateEndGame(word, isWin) {
+  const guessableLetters = document.getElementById('letter-buttons');
+
+  guessableLetters.innerHTML = '';
+  guessableLetters.insertAdjacentHTML('afterend', `
+    <div>
+      <h3>${isWin ? 'Huzahh 🎉' : 'Shark attack!'}</h3>
+      <p>${isWin ? (
+        `You correctly guessed the sharks favorite word: <em>${word}</em>! You continue to be welcome in their waters 🦈`
+      ) : (
+        `This shark is displeased you don't know it's favorite word: <em>${word}</em>. They no longer welcome you in their waters 😢`
+      )}</p>
+      <p>
+        ${isWin ? (
+          `Uh oh, another shark appeared demanding you say it's favorite word! <a href="/sharkwords">Start Guessing!</a>`
+        ) : (
+          `Look another shark, maybe you'll have better luck with them! <a href="/sharkwords">Approach the shark!</a>`
+        )}
+      </p>
+    </div>
+  `);
+}
 
 // This is like if __name__ == '__main__' in Python
 // It will be called when the file is run (because
 // we call the function on line 66)
 (function startGame() {
-  // For now, we'll hardcode the word that the user has to guess
-  // You can change this to choose a random word from WORDS once you
-  // finish this lab but we hard code it so we know what the word is
-  // and can tell if things look correct for this word
-  const word = 'hello';
+  
+  const word = generateRandomWord(WORDS);
   const successTracker = {
     numFound: 0,
     numToFind: word.length
